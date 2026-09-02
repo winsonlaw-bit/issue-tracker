@@ -1,0 +1,14 @@
+# What this app is. Substrait shows this in the portal and the API Library.
+description: >
+  A simple internal issue tracker for logistics teams. Add shipment issues
+  with reference, lane, type, status, owner and notes. View all issues in a
+  table, toggle status between open and closed, and delete mistaken entries.
+  Uses OceanBase for permanent storage when deployed.
+
+# OceanBase is a shared HA MySQL-compatible cluster with backups.
+# The engine cannot be changed once deployed — choose deliberately.
+database: oceanbase
+
+# Skill/plugin version this app was last deployed with — stamped by
+# /substrait:deploy; do not edit by hand.
+scaffold_version: 2026.08.11.220000

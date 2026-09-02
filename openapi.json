@@ -1,0 +1,270 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Issue Tracker",
+    "description": "A simple internal issue tracker for logistics teams. Add shipment issues, view them in a table, toggle status, and delete records.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["system"],
+        "summary": "Health",
+        "description": "Substrait calls this to decide whether the app started correctly.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "status": { "type": "string", "example": "ok" } },
+                  "required": ["status"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/info": {
+      "get": {
+        "tags": ["system"],
+        "summary": "App info",
+        "description": "Returns the app name, storage mode (database or in-memory), and server time.",
+        "operationId": "info_api_info_get",
+        "responses": {
+          "200": {
+            "description": "Application information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "app": { "type": "string", "example": "Issue Tracker" },
+                    "mode": { "type": "string", "example": "database" },
+                    "server_time": { "type": "string", "example": "2026-09-01 10:30:00 UTC" }
+                  },
+                  "required": ["app", "mode", "server_time"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues": {
+      "get": {
+        "tags": ["issues"],
+        "summary": "List all issues",
+        "description": "Returns all issues, newest first.",
+        "operationId": "list_issues_api_issues_get",
+        "responses": {
+          "200": {
+            "description": "A list of issues",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Issue" }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["issues"],
+        "summary": "Create a new issue",
+        "description": "Add a new issue to the tracker.",
+        "operationId": "create_issue_api_issues_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IssueCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issue created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Issue" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues/{issue_id}/status": {
+      "patch": {
+        "tags": ["issues"],
+        "summary": "Update issue status",
+        "description": "Toggle the status of an issue between open and closed.",
+        "operationId": "update_status_api_issues_{issue_id}_status_patch",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StatusUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Issue updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Issue" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/issues/{issue_id}": {
+      "delete": {
+        "tags": ["issues"],
+        "summary": "Delete an issue",
+        "description": "Permanently delete an issue by its ID.",
+        "operationId": "delete_issue_api_issues_{issue_id}_delete",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Issue deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": { "type": "boolean", "example": true },
+                    "id": { "type": "integer", "example": 1 }
+                  },
+                  "required": ["deleted", "id"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Issue not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "reference": { "type": "string", "example": "SBX00123" },
+          "lane": { "type": "string", "example": "SG\u2192MY" },
+          "issue_type": { "type": "string", "example": "customs hold" },
+          "status": { "type": "string", "enum": ["open", "closed"], "example": "open" },
+          "owner": { "type": "string", "example": "Ali" },
+          "notes": { "type": "string", "example": "waiting on HS code from shipper" },
+          "created_at": { "type": "string", "example": "2026-09-01 10:30:00" }
+        },
+        "required": ["id", "reference", "lane", "issue_type", "status", "owner", "notes", "created_at"]
+      },
+      "IssueCreate": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string", "example": "SBX00123" },
+          "lane": { "type": "string", "example": "SG\u2192MY" },
+          "issue_type": { "type": "string", "example": "customs hold" },
+          "status": { "type": "string", "enum": ["open", "closed"], "default": "open", "example": "open" },
+          "owner": { "type": "string", "example": "Ali" },
+          "notes": { "type": "string", "default": "", "example": "waiting on HS code from shipper" }
+        },
+        "required": ["reference", "lane", "issue_type", "owner"]
+      },
+      "StatusUpdate": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["open", "closed"], "example": "closed" }
+        },
+        "required": ["status"]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "Could not load issues" }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}
